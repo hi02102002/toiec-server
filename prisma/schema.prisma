@@ -1,0 +1,144 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  password     String?
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  avatar       String?
+  provider     String     @default("local")
+  refreshToken String?    @map("refresh_token")
+  status       UserStatus @default(ACTIVE)
+
+  role     Role       @default(USER)
+  testUser TestUser[]
+
+  @@map("users")
+}
+
+enum TestStatus {
+  PUBLIC
+  DRAFT
+  PRIVATE
+}
+
+model Test {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  parts     Part[]
+  testUsers TestUser[]
+  status    TestStatus @default(PUBLIC)
+
+  @@map("tests")
+}
+
+model TestUser {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  numberCorrect Int      @map("number_correct")
+  poitn         Int
+
+  testId String @map("test_id")
+  test   Test   @relation(references: [id], fields: [testId], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("test_users")
+}
+
+model Part {
+  id        String     @id @default(uuid())
+  name      String
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  test      Test       @relation(fields: [testId], references: [id], onDelete: Cascade)
+  testId    String     @map("test_id")
+  type      PartType
+  questions Question[]
+
+  @@map("parts")
+}
+
+model Question {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  part      Part     @relation(fields: [partId], references: [id], onDelete: Cascade)
+  partId    String   @map("part_id")
+
+  image String @default("")
+  audio String @default("")
+  text  String @default("")
+
+  parentId  String?    @map("parent_id")
+  parent    Question?  @relation("parents", fields: [parentId], references: [id])
+  quesions  Question[] @relation("parents")
+  answers   Answer[]
+  grammar   Grammar?   @relation(fields: [grammarId], references: [id])
+  grammarId String?    @map("grammar_id")
+
+  @@map("questions")
+}
+
+model Answer {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId    String   @map("question_id")
+  content       String
+  correctAnswer Boolean  @default(false) @map("correct_answer")
+  explanation   String   @default("")
+
+  @@map("answers")
+}
+
+model Grammar {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  theory    String
+
+  questions Question[]
+
+  @@map("grammars")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum PartType {
+  PART1
+  PART2
+  PART3
+  PART4
+  PART5
+  PART6
+  PART7
+}
