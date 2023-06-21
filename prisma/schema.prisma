@@ -36,7 +36,6 @@ model User {
 enum TestStatus {
   PUBLIC
   DRAFT
-  PRIVATE
 }
 
 model Test {
@@ -50,6 +49,17 @@ model Test {
   status    TestStatus @default(PUBLIC)
 
   @@map("tests")
+}
+
+model NationalTest {
+  id        String     @id @default(uuid())
+  name      String
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  status    TestStatus @default(PUBLIC)
+  Questions Question[]
+
+  @@map("national_tests")
 }
 
 model TestUser {
@@ -83,35 +93,37 @@ model Part {
 
 model Question {
   id        String   @id @default(uuid())
-  name      String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  part      Part     @relation(fields: [partId], references: [id], onDelete: Cascade)
-  partId    String   @map("part_id")
+  part      Part?    @relation(fields: [partId], references: [id], onDelete: Cascade)
+  partId    String?  @map("part_id")
 
-  image String @default("")
-  audio String @default("")
-  text  String @default("")
+  image      String @default("")
+  audio      String @default("")
+  text       String @default("")
+  transcript String @default("")
+  explain    String @default("")
 
-  parentId  String?    @map("parent_id")
-  parent    Question?  @relation("parents", fields: [parentId], references: [id])
-  quesions  Question[] @relation("parents")
-  answers   Answer[]
-  grammar   Grammar?   @relation(fields: [grammarId], references: [id])
-  grammarId String?    @map("grammar_id")
+  parentId       String?       @map("parent_id")
+  parent         Question?     @relation("parents", fields: [parentId], references: [id])
+  quesions       Question[]    @relation("parents")
+  answers        Answer[]
+  grammar        Grammar?      @relation(fields: [grammarId], references: [id])
+  grammarId      String?       @map("grammar_id")
+  nationalTest   NationalTest? @relation(fields: [nationalTestId], references: [id])
+  nationalTestId String?       @map("national_test_id")
 
   @@map("questions")
 }
 
 model Answer {
-  id            String   @id @default(uuid())
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  questionId    String   @map("question_id")
-  content       String
-  correctAnswer Boolean  @default(false) @map("correct_answer")
-  explanation   String   @default("")
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId String   @map("question_id")
+  content    String
+  isCorrect  Boolean  @default(false) @map("is_correct")
 
   @@map("answers")
 }

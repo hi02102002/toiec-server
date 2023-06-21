@@ -53,8 +53,8 @@ export class TestsController {
   ) {
     const test = await this.testsService.update(id, body);
 
-    res.status(201).json({
-      message: 'Create test successfully',
+    res.status(200).json({
+      message: 'Update test successfully',
       data: test,
     });
   }
@@ -66,6 +66,17 @@ export class TestsController {
 
     res.status(200).json({
       message: 'Delete tests successfully',
+    });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/parts/:id')
+  async getPart(@Res() res: Response, @Param('id') id: string) {
+    const parts = await this.testsService.getPart(id);
+
+    res.status(200).json({
+      message: 'Get parts successfully',
+      data: parts,
     });
   }
 }

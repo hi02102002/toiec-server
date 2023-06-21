@@ -94,4 +94,31 @@ export class TestsService {
 
     return test;
   }
+
+  async getPart(id: string) {
+    try {
+      const part = await this.prisma.part.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          test: {
+            select: {
+              name: true,
+            },
+          },
+          id: true,
+          name: true,
+          type: true,
+        },
+      });
+      return part;
+    } catch (error) {
+      if (error.code === 'P2025') {
+        return null;
+      }
+
+      throw error;
+    }
+  }
 }
