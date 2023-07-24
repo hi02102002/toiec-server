@@ -1,10 +1,7 @@
+import { toBoolean } from '@/common/utils';
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 import { toLower, toNumber, trim } from 'lodash';
-
-const toBoolean = (value: string) => {
-  return value === 'true' || value === '1' ? true : false;
-};
 
 export class QueryDto {
   @Transform(({ value }) => toLower(trim(value)))

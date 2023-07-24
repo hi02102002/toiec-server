@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
+import { UserStatus } from '@prisma/client';
 import { Request } from 'express';
 import { Strategy } from 'passport-custom';
 import { AuthService } from '../auth.service';
@@ -19,6 +20,12 @@ export class SocialStrategy extends PassportStrategy(Strategy, 'social') {
       name,
       provider,
     });
+
+    if (user.status === UserStatus.BLOCKED) {
+      throw new UnauthorizedException(
+        'Your account is blocked by admin. Please contact admin to resolve problem.',
+      );
+    }
 
     return user;
   }

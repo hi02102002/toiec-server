@@ -19,4 +19,8 @@ export class QueryQuestionsDto {
   @IsOptional()
   @IsString()
   parentId: string;
+
+  @IsOptional()
+  @IsString()
+  grammarId: string;
 }

@@ -1,9 +1,10 @@
+import { Role } from '@/common/types';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UsersService } from '@/users/users.service';
 import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Role, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { omit } from 'lodash';
 import { LoginDto, LoginSocialDto, RegisterDto } from './dtos';
@@ -59,7 +60,7 @@ export class AuthService {
         name,
         password: hashed,
         provider: 'local',
-        role: Role.USER,
+        roles: [Role.USER],
       },
     });
 
@@ -78,7 +79,7 @@ export class AuthService {
           name,
           avatar,
           provider,
-          role: Role.USER,
+          roles: [Role.USER],
         },
       });
       return omit(user, ['password']);
@@ -118,7 +119,7 @@ export class AuthService {
     const payload = {
       email: user.email,
       sub: user.id,
-      role: user.role,
+      roles: user.roles,
     };
     if (type === 'access') {
       return this.jwtService.sign(payload, {

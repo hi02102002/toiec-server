@@ -27,8 +27,9 @@ model User {
   refreshToken String?    @map("refresh_token")
   status       UserStatus @default(ACTIVE)
 
-  role     Role       @default(USER)
-  testUser TestUser[]
+  roles     String[]    @default(["USER"])
+  testUser  TestUser[]
+  Flashcard Flashcard[]
 
   @@map("users")
 }
@@ -43,10 +44,12 @@ model Test {
   name      String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  audio     String?
 
   parts     Part[]
   testUsers TestUser[]
   status    TestStatus @default(PUBLIC)
+  questions Question[]
 
   @@map("tests")
 }
@@ -63,11 +66,15 @@ model NationalTest {
 }
 
 model TestUser {
-  id            String   @id @default(uuid())
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  numberCorrect Int      @map("number_correct")
-  poitn         Int
+  id               String   @id @default(uuid())
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  totalScore       Int      @map("total_score")
+  listeningScore   Int      @map("listening_score")
+  readingScore     Int      @map("reading_socre")
+  readingCorrect   Int      @map("reading_correct")
+  listeningCorrect Int      @map("listening_correct")
+  numAttempt       Int      @map("num_attempt")
 
   testId String @map("test_id")
   test   Test   @relation(references: [id], fields: [testId], onDelete: Cascade)
@@ -75,7 +82,21 @@ model TestUser {
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  choices Choice[]
+
   @@map("test_users")
+}
+
+model Choice {
+  id String @id @default(uuid())
+
+  testUser   TestUser? @relation(fields: [testUserId], references: [id])
+  testUserId String?   @map("test_user_id")
+
+  answer   Answer? @relation(fields: [answerId], references: [id])
+  answerId String?
+
+  @@map("choices")
 }
 
 model Part {
@@ -112,6 +133,9 @@ model Question {
   grammarId      String?       @map("grammar_id")
   nationalTest   NationalTest? @relation(fields: [nationalTestId], references: [id])
   nationalTestId String?       @map("national_test_id")
+  testId         String?       @map("test_id")
+  test           Test?         @relation(fields: [testId], references: [id])
+  partType       PartType?     @map("part_type")
 
   @@map("questions")
 }
@@ -124,6 +148,7 @@ model Answer {
   questionId String   @map("question_id")
   content    String
   isCorrect  Boolean  @default(false) @map("is_correct")
+  choices    Choice[]
 
   @@map("answers")
 }
@@ -137,12 +162,8 @@ model Grammar {
 
   questions Question[]
 
+  @@index([name])
   @@map("grammars")
-}
-
-enum Role {
-  ADMIN
-  USER
 }
 
 enum PartType {
@@ -153,4 +174,65 @@ enum PartType {
   PART5
   PART6
   PART7
+}
+
+model Topic {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  parentId  String?  @map("parent_id")
+  parent    Topic?   @relation("parents", fields: [parentId], references: [id], onDelete: Cascade)
+  topics    Topic[]  @relation("parents")
+  words     Word[]
+  hasChild  Boolean  @default(false) @map("has_child")
+
+  @@index([name])
+  @@map("topics")
+}
+
+model Word {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  topicId       String?  @map("topic_id")
+  topic         Topic?   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  name          String
+  definition    String?
+  meaning       String?
+  examples      String[]
+  image         String?
+  patchOfSpeech String?
+  note          String?
+  pronunciation String?
+
+  audios    WordAudio[]
+  flascards Flashcard[]
+
+  @@index([name])
+  @@map("words")
+}
+
+model WordAudio {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  wordId    String?  @map("word_id")
+  word      Word?    @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  src       String
+  region    String
+
+  @@map("word_audios")
+}
+
+model Flashcard {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wordId    String?  @map("word_id")
+  word      Word?    @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@map("flashcards")
 }

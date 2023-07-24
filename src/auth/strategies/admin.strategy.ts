@@ -1,8 +1,8 @@
+import { Role } from '@/common/types';
 import { UsersService } from '@/users/users.service';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { Role } from '@prisma/client';
 import { omit } from 'lodash';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
@@ -24,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: string; email: string; role: Role }) {
+  async validate(payload: { sub: string; email: string; roles: Role[] }) {
     const user = await this.userService.findOne(payload.email);
     return omit(user, ['password']);
   }

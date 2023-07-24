@@ -4,11 +4,13 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { MorganMiddleware } from './common/middlewares/morgan.middleware';
+import { GrammarsModule } from './grammars/grammars.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QuestionsModule } from './questions/questions.module';
 import { TestsModule } from './tests/tests.module';
 import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
+import { TopicsModule } from './topics/topics.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { UsersModule } from './users/users.module';
     UploadModule,
     CloudinaryModule,
     QuestionsModule,
+    GrammarsModule,
+    TopicsModule,
   ],
   controllers: [],
   providers: [],

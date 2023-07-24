@@ -40,4 +40,12 @@ export class CreateQuestionDto {
     content: string;
     isCorrect: boolean;
   }>;
+
+  @IsString()
+  @IsOptional()
+  grammarId: string;
+
+  @IsString()
+  @IsOptional()
+  testId: string;
 }

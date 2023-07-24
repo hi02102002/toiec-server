@@ -22,6 +22,8 @@ export class QuestionsService {
       explain,
       transcript,
       answers,
+      grammarId,
+      testId,
     } = fields;
 
     if (!parentId) {
@@ -41,6 +43,7 @@ export class QuestionsService {
         audio,
         image,
         parentId: parentId || null,
+        grammarId,
         text,
         explain,
         transcript,
@@ -52,6 +55,7 @@ export class QuestionsService {
               },
             }
           : undefined,
+        testId,
       },
     });
 
@@ -80,7 +84,9 @@ export class QuestionsService {
   }
 
   async getAllQuestions(query: QueryQuestionsDto) {
-    const { page, limit, partId, parentId } = query;
+    const { page, limit, partId, parentId, grammarId } = query;
+
+    // total = 10 page 1 limit 5
 
     const [total, questions] = await this.prismaService.$transaction([
       this.prismaService.question.count({
@@ -91,6 +97,9 @@ export class QuestionsService {
             },
             {
               parentId,
+            },
+            {
+              grammarId,
             },
           ],
         },
@@ -103,6 +112,9 @@ export class QuestionsService {
             },
             {
               parentId,
+            },
+            {
+              grammarId,
             },
           ],
         },

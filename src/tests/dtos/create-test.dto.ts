@@ -6,4 +6,8 @@ export class CreateTestDto {
     message: 'Name is required',
   })
   name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  audio: string;
 }

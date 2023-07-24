@@ -55,7 +55,6 @@ export class QuestionsController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('/:id')
   async getQuestion(@Res() res: Response, @Param('id') id: string) {
     const question = await this.questionsService.getQuestion(id);

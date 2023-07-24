@@ -1,7 +1,11 @@
+import { SCORE_TOIEC_LISTENING } from '@/common/constants';
+import { TChoice } from '@/common/types';
+import { isListening } from '@/common/utils';
 import { PrismaService } from '@/prisma/prisma.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PartType, Test } from '@prisma/client';
-import { CreateTestDto, QueryDto } from './dtos';
+import { SCORE_TOIEC_READING } from './../common/constants/index';
+import { CreateTestDto, QueryDto, SubmitTestDto, UpdateTestDto } from './dtos';
 
 const PARTS = {
   1: PartType.PART1,
@@ -17,11 +21,12 @@ const PARTS = {
 export class TestsService {
   constructor(private readonly prisma: PrismaService) {}
   async create(fields: CreateTestDto) {
-    const { name } = fields;
+    const { name, audio } = fields;
 
     const test: Test = await this.prisma.test.create({
       data: {
         name,
+        audio,
         parts: {
           createMany: {
             data: new Array(7).fill(0).map((_, index) => ({
@@ -37,6 +42,22 @@ export class TestsService {
     });
 
     return test;
+  }
+
+  async getOne(id: string) {
+    try {
+      const test = await this.prisma.test.findUnique({
+        where: {
+          id,
+        },
+      });
+      return test;
+    } catch (error) {
+      if (error.code === 'P2025') {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async remove(testIds: string[]) {
@@ -77,7 +98,7 @@ export class TestsService {
     };
   }
 
-  async update(id: string, body: CreateTestDto) {
+  async update(id: string, body: UpdateTestDto) {
     const { name } = body;
 
     const test = await this.prisma.test.update({
@@ -105,6 +126,7 @@ export class TestsService {
           test: {
             select: {
               name: true,
+              id: true,
             },
           },
           id: true,
@@ -118,6 +140,221 @@ export class TestsService {
         return null;
       }
 
+      throw error;
+    }
+  }
+
+  async getTestToPracticeOrResult(
+    id: string,
+    type: 'practice' | 'explain' = 'practice',
+  ) {
+    const queryQuestions: any = {
+      answers: {
+        select: {
+          content: true,
+          id: true,
+          questionId: true,
+          updatedAt: true,
+          createdAt: true,
+          isCorrect: type === 'explain',
+        },
+      },
+      audio: true,
+      createdAt: true,
+      id: true,
+      image: true,
+      grammarId: true,
+      nationalTestId: true,
+      part: {
+        select: {
+          type: true,
+        },
+      },
+      text: true,
+      updatedAt: true,
+      explain: type === 'explain',
+      transcript: type === 'explain',
+    };
+
+    try {
+      const test = await this.prisma.test.findUnique({
+        where: {
+          id,
+        },
+        include: {
+          parts: {
+            include: {
+              questions: {
+                select: {
+                  ...queryQuestions,
+                  quesions: {
+                    select: {
+                      ...queryQuestions,
+                    },
+                    orderBy: {
+                      createdAt: 'asc',
+                    },
+                  },
+                },
+                orderBy: {
+                  createdAt: 'asc',
+                },
+              },
+            },
+          },
+        },
+      });
+      return test;
+    } catch (error) {
+      if (error.code === 'P2025') {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async submitTest(fields: SubmitTestDto, userId: string) {
+    const { choices, testId } = fields;
+
+    const test = await this.prisma.test.findUnique({
+      where: {
+        id: testId,
+      },
+    });
+
+    if (!test) {
+      throw new NotFoundException("Can't find test with this ID");
+    }
+
+    const { listening, reading } = choices.reduce(
+      (prev, current) => {
+        if (isListening(current.partType)) {
+          return {
+            ...prev,
+            listening: prev.listening.concat(current),
+          };
+        }
+
+        return {
+          ...prev,
+          reading: prev.reading.concat(current),
+        };
+      },
+      {
+        listening: [],
+        reading: [],
+      } as {
+        listening: Array<TChoice>;
+        reading: Array<TChoice>;
+      },
+    );
+
+    const [numListening, numReading] = await Promise.all([
+      this.calcNumberCorrect(listening),
+      this.calcNumberCorrect(reading),
+    ]);
+
+    const scoreListening = SCORE_TOIEC_LISTENING(numListening);
+    const scoreReading = SCORE_TOIEC_READING(numReading);
+
+    const total = scoreListening + scoreReading;
+
+    const count = await this.prisma.testUser.count({
+      where: {
+        testId,
+        userId,
+      },
+    });
+
+    const result = await this.prisma.testUser.create({
+      data: {
+        userId,
+        testId,
+        listeningCorrect: numListening,
+        readingCorrect: numReading,
+        listeningScore: scoreListening,
+        readingScore: scoreReading,
+        totalScore: total,
+        numAttempt: count + 1,
+        choices: {
+          createMany: {
+            data: choices.map((choice) => ({
+              answerId: choice.answerId,
+            })),
+          },
+        },
+      },
+    });
+
+    return result;
+  }
+
+  async checkChoiceIsCorrect(choice: TChoice) {
+    const question = await this.prisma.question.findUnique({
+      where: {
+        id: choice.questionId,
+      },
+      include: {
+        answers: true,
+      },
+    });
+
+    return question.answers.some((a) => {
+      return a.isCorrect && a.id === choice.answerId;
+    });
+  }
+
+  async calcNumberCorrect(choices: TChoice[]) {
+    let count = 0;
+
+    for (const choice of choices) {
+      if (await this.checkChoiceIsCorrect(choice)) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  async getResultById(id: string, userId: string) {
+    try {
+      const result = await this.prisma.testUser.findFirst({
+        where: {
+          id,
+          userId,
+        },
+        include: {
+          user: {
+            select: {
+              avatar: true,
+              name: true,
+            },
+          },
+          test: {
+            select: {
+              name: true,
+              id: true,
+            },
+          },
+          choices: {
+            select: {
+              answer: {
+                select: {
+                  content: true,
+                  id: true,
+                },
+              },
+              testUserId: true,
+              id: true,
+            },
+          },
+        },
+      });
+
+      return result;
+    } catch (error) {
+      if (error.code === 'P2025') {
+        return null;
+      }
       throw error;
     }
   }
