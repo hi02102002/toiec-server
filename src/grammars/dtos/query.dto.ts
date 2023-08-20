@@ -1,5 +1,6 @@
+import { toBoolean } from '@/common/utils';
 import { Transform } from 'class-transformer';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 import { toNumber } from 'lodash';
 
 export class QueryDto {
@@ -16,4 +17,9 @@ export class QueryDto {
   @IsOptional()
   @IsString()
   name: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => toBoolean(value))
+  haveTheory: boolean;
 }

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "flashcards" ALTER COLUMN "due" SET DEFAULT CURRENT_TIMESTAMP;

@@ -6,7 +6,7 @@ import { CreateGrammarDto, QueryDto, UpdateGrammarDto } from './dtos';
 export class GrammarsService {
   constructor(private readonly prismaService: PrismaService) {}
   async getAllGrammars(query: QueryDto) {
-    const { page, limit, name } = query;
+    const { page, limit, name, haveTheory = true } = query;
     const [total, grammars] = await this.prismaService.$transaction([
       this.prismaService.grammar.count(),
       this.prismaService.grammar.findMany({
@@ -16,6 +16,13 @@ export class GrammarsService {
           name: {
             contains: name,
           },
+        },
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
+          updatedAt: true,
+          theory: haveTheory,
         },
       }),
     ]);

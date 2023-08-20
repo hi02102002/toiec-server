@@ -12,5 +12,5 @@ export class CreateTopicDto {
 
   @IsBoolean()
   @Transform(({ value }) => toBoolean(value))
-  hasChildren: boolean;
+  hasChild: boolean;
 }

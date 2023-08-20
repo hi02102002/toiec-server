@@ -27,9 +27,13 @@ model User {
   refreshToken String?    @map("refresh_token")
   status       UserStatus @default(ACTIVE)
 
-  roles     String[]    @default(["USER"])
-  testUser  TestUser[]
-  Flashcard Flashcard[]
+  roles        String[]      @default(["USER"])
+  testUser     TestUser[]
+  desks        Deck[]
+  flashcards   Flashcard[]
+  settingLearn SettingLearn?
+  File         File[]
+  isTesting    Boolean?      @default(false) @map("is_testing")
 
   @@map("users")
 }
@@ -206,33 +210,90 @@ model Word {
   note          String?
   pronunciation String?
 
-  audios    WordAudio[]
-  flascards Flashcard[]
+  audios WordAudio[]
 
   @@index([name])
   @@map("words")
 }
 
 model WordAudio {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  wordId    String?  @map("word_id")
-  word      Word?    @relation(fields: [wordId], references: [id], onDelete: Cascade)
-  src       String
-  region    String
+  id          String     @id @default(uuid())
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  wordId      String?    @map("word_id")
+  word        Word?      @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  src         String
+  region      String
+  flashcard   Flashcard? @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+  flashcardId String?    @map("flashcard_id")
 
   @@map("word_audios")
+}
+
+model Deck {
+  id         String      @id @default(uuid())
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+  userId     String?     @map("user_id")
+  user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  flashcards Flashcard[]
+
+  @@unique([userId, name])
+  @@map("decks")
 }
 
 model Flashcard {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  userId    String?  @map("user_id")
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  wordId    String?  @map("word_id")
-  word      Word?    @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  deckId        String      @map("deck_id")
+  deck          Deck        @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  n             Int?        @default(0) // number of review
+  interval      Float?      @default(0.0) // interval between reviews
+  efactor       Float?      @default(2.5) // easiness factor
+  name          String?
+  definition    String?
+  meaning       String?
+  examples      String[]
+  image         String?
+  patchOfSpeech String?
+  note          String?
+  pronunciation String?
+  audios        WordAudio[]
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String      @map("user_id")
+  due           DateTime?   @default(now()) @map("due")
+  lastReviewed  DateTime?   @map("last_reviewed")
 
   @@map("flashcards")
+}
+
+model SettingLearn {
+  id                 String   @id @default(uuid())
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  maxFlashcardPerDay Int      @default(20) @map("max_flashcard_per_day")
+  maxReviewPerDay    Int      @default(200) @map("max_review_per_day")
+  isShuffle          Boolean  @default(false) @map("is_shuffle")
+  autoPlayAudio      Boolean  @default(false) @map("auto_play_audio")
+  timePerFlashcard   Int      @default(60) @map("time_per_flashcard") // 60s
+  userId             String   @unique @map("user_id")
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("setting_learns")
+}
+
+model File {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  name      String
+  url       String
+  publicId  String   @map("public_id")
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("files")
 }

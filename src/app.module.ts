@@ -11,6 +11,9 @@ import { TestsModule } from './tests/tests.module';
 import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
 import { TopicsModule } from './topics/topics.module';
+import { DecksModule } from './decks/decks.module';
+import { FlashcardsModule } from './flashcards/flashcards.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -27,6 +30,9 @@ import { TopicsModule } from './topics/topics.module';
     QuestionsModule,
     GrammarsModule,
     TopicsModule,
+    DecksModule,
+    FlashcardsModule,
+    SettingsModule,
   ],
   controllers: [],
   providers: [],

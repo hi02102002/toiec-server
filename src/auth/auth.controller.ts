@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
@@ -11,9 +12,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
-import { omit } from 'lodash';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dtos';
+import { RegisterDto, UpdateEmailDto, UpdateProfileDto } from './dtos';
 import {
   JwtAuthGuard,
   LocalAuthGuard,
@@ -91,9 +91,11 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('/me')
   async me(@Req() req: IRequestWithUser, @Res() res: Response) {
+    const data = await this.authService.getMe(req.user.id);
+
     res.status(HttpStatus.OK).json({
       message: 'Get user profile successfully',
-      data: omit(req.user, ['password', 'refreshToken']),
+      data,
     });
   }
 
@@ -121,6 +123,36 @@ export class AuthController {
         accessToken,
         refreshToken,
       },
+    });
+  }
+
+  @Patch('/update-profile')
+  @UseGuards(JwtAuthGuard)
+  async updateName(
+    @Res() res: Response,
+    @Req() req: IRequestWithUser,
+    @Body() body: UpdateProfileDto,
+  ) {
+    const data = await this.authService.updateProfile(req.user.id, body);
+
+    res.status(HttpStatus.OK).json({
+      message: 'Update your profile successfully',
+      data,
+    });
+  }
+
+  @Patch('/update-email')
+  @UseGuards(JwtAuthGuard)
+  async updateEmail(
+    @Res() res: Response,
+    @Req() req: IRequestWithUser,
+    @Body() body: UpdateEmailDto,
+  ) {
+    const data = await this.authService.updateEmail(req.user.id, body);
+
+    res.status(HttpStatus.OK).json({
+      message: 'Update your email successfully',
+      data,
     });
   }
 }

@@ -2,8 +2,8 @@ import { PartType } from '@prisma/client';
 
 export * from './expressFileToBlob';
 
-export const toBoolean = (value: string) => {
-  return value === 'true' || value === '1' ? true : false;
+export const toBoolean = (value: string | boolean) => {
+  return value === 'true' || value === '1' || value === true ? true : false;
 };
 export const isListening = (partType: PartType) => {
   return (

@@ -1,5 +1,5 @@
 import { PrismaService } from '@/prisma/prisma.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   CreateTopicDto,
   CreateWordDto,
@@ -24,12 +24,13 @@ export class TopicsService {
   }
 
   async createTopic(fields: CreateTopicDto) {
-    const { name, parentId = null } = fields;
+    const { name, parentId = null, hasChild } = fields;
 
     const topic = await this.prisma.topic.create({
       data: {
         name,
         parentId: parentId,
+        hasChild,
       },
     });
 
@@ -176,6 +177,16 @@ export class TopicsService {
   async getWords(topicId: string, query: QueryWordsDto) {
     const { limit, name, page } = query;
 
+    const topic = await this.prisma.topic.findUnique({
+      where: {
+        id: topicId,
+      },
+    });
+
+    if (!topic) {
+      throw new NotFoundException('Topic not found');
+    }
+
     const [words, total] = await this.prisma.$transaction([
       this.prisma.word.findMany({
         where: {
@@ -184,7 +195,7 @@ export class TopicsService {
           },
           topicId,
         },
-        skip: page && limit ? (page - 1) * limit : undefined,
+        skip: page && page > 0 && limit ? (page - 1) * limit : undefined,
         take: limit,
         orderBy: {
           createdAt: 'asc',
@@ -206,6 +217,7 @@ export class TopicsService {
     return {
       words,
       total,
+      topic,
     };
   }
 

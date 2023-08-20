@@ -99,7 +99,7 @@ export class TestsService {
   }
 
   async update(id: string, body: UpdateTestDto) {
-    const { name } = body;
+    const { name, audio } = body;
 
     const test = await this.prisma.test.update({
       where: {
@@ -107,6 +107,7 @@ export class TestsService {
       },
       data: {
         name,
+        audio,
       },
       include: {
         parts: true,

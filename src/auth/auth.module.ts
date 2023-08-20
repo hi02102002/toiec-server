@@ -1,4 +1,5 @@
 import { PrismaModule } from '@/prisma/prisma.module';
+import { SettingsModule } from '@/settings/settings.module';
 import { UsersModule } from '@/users/users.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -21,6 +22,6 @@ import {
     SocialStrategy,
     RefreshTokenStrategy,
   ],
-  imports: [UsersModule, PrismaModule, JwtModule, ConfigModule],
+  imports: [UsersModule, PrismaModule, JwtModule, ConfigModule, SettingsModule],
 })
 export class AuthModule {}

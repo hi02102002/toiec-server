@@ -4,11 +4,7 @@ import { readFileSync } from 'fs';
 const prisma = new PrismaClient();
 const main = async () => {
   console.log(process.cwd());
-  const data = JSON.parse(
-    readFileSync(`${process.cwd()}\\toiec_word_list.json`, 'utf-8'),
-  );
-
-  console.log(data);
+  const data = JSON.parse(readFileSync(`${process.cwd()}\\SAT.json`, 'utf-8'));
 
   const promises = data.map((item: any) => {
     return prisma.word.create({
@@ -30,7 +26,7 @@ const main = async () => {
         pronunciation: item.pronunciation,
         topic: {
           connect: {
-            id: '07016667-655d-4ce5-b22c-bbd2e6e4e911',
+            id: '35c7e837-f4d8-4adb-a0b8-973f01b79729',
           },
         },
       },

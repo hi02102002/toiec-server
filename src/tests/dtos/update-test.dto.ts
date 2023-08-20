@@ -4,4 +4,8 @@ export class UpdateTestDto {
   @IsString()
   @IsOptional()
   name: string;
+
+  @IsString()
+  @IsOptional()
+  audio: string;
 }
