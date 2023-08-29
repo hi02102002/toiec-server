@@ -120,14 +120,49 @@ export class FlashcardsService {
       throw new NotFoundException('Flashcard not found');
     }
 
-    const updatedFlashcard = await this.prismaService.flashcard.update({
-      where: {
-        id,
-      },
-      data: {
-        ...fields,
-      },
-    });
+    const currentDate = new Date(getDate());
+
+    const [, updatedFlashcard] = await this.prismaService.$transaction([
+      this.prismaService.deck.update({
+        where: {
+          id: flashcard.deckId,
+        },
+        data: {
+          learnAt: fields.lastReviewed ? new Date(getDate()) : undefined,
+        },
+      }),
+      this.prismaService.flashcard.update({
+        where: {
+          id,
+        },
+        data: {
+          ...fields,
+        },
+      }),
+      this.prismaService.numberFlashcardLearned.upsert({
+        where: {
+          deckId_date: {
+            deckId: flashcard.deckId,
+            date: currentDate,
+          },
+        },
+        create: {
+          userId,
+          date: currentDate,
+          deckId: flashcard.deckId,
+          learned: fields.n === 1 ? 1 : 0,
+          reviewed: fields.n > 1 ? 1 : 0,
+        },
+        update: {
+          learned: {
+            increment: fields.n === 1 ? 1 : 0,
+          },
+          reviewed: {
+            increment: fields.n > 1 ? 1 : 0,
+          },
+        },
+      }),
+    ]);
 
     return updatedFlashcard;
   }
@@ -160,6 +195,24 @@ export class FlashcardsService {
       },
     });
 
+    const currentLearned =
+      await this.prismaService.numberFlashcardLearned.findUnique({
+        where: {
+          deckId_date: {
+            deckId,
+            date: new Date(getDate()),
+          },
+        },
+      });
+
+    const maxFlashcardLearnPerDay = currentLearned.learned
+      ? settings?.maxFlashcardPerDay - currentLearned.learned
+      : settings?.maxFlashcardPerDay;
+
+    const maxReviewPerDay = currentLearned.reviewed
+      ? settings?.maxReviewPerDay - currentLearned.reviewed
+      : settings?.maxReviewPerDay;
+
     const [flashcardsToLearn, flashcardsNeedReview, allFlashcards] =
       await Promise.all([
         this.prismaService.flashcard.findMany({
@@ -169,7 +222,7 @@ export class FlashcardsService {
             n: 0,
             lastReviewed: null,
           },
-          take: settings?.maxFlashcardPerDay,
+          take: maxFlashcardLearnPerDay,
         }),
         this.prismaService.flashcard.findMany({
           where: {
@@ -187,7 +240,7 @@ export class FlashcardsService {
               },
             },
           },
-          take: settings?.maxReviewPerDay,
+          take: maxReviewPerDay,
           orderBy: {
             lastReviewed: 'asc',
           },
@@ -244,17 +297,6 @@ export class FlashcardsService {
       dateEnd = dayjs().toDate().toISOString();
     }
 
-    const data = await this.prismaService.flashcard.findMany({
-      where: {
-        deckId: query.deckId,
-        userId,
-        lastReviewed: {
-          gte: new Date(dateStart || dayjs().subtract(7, 'day').toDate()),
-          lte: new Date(dateEnd || dayjs().toDate()),
-        },
-      },
-    });
-
     const charts = [];
 
     const diff = dayjs(dateEnd).diff(dayjs(dateStart), 'day');
@@ -262,18 +304,18 @@ export class FlashcardsService {
     for (let i = 1; i <= diff; i++) {
       const date = dayjs(dateStart).add(i, 'day').toDate();
 
-      const flashcards = data.filter((item) => {
-        return dayjs(item.lastReviewed).isSame(date, 'day');
+      const data = await this.prismaService.numberFlashcardLearned.findFirst({
+        where: {
+          deckId: query.deckId,
+          date: new Date(getDate(date)),
+          userId,
+        },
       });
 
-      const learned = flashcards.filter((item) => item.n === 1).length;
-
-      const reviewed = flashcards.filter((item) => item.n > 1).length;
-
       charts.push({
-        date: dayjs(date).format('DD/MM'),
-        learned,
-        reviewed,
+        date: dayjs(date).format('DD/MM/YYYY'),
+        learned: data?.learned || 0,
+        reviewed: data?.reviewed || 0,
       });
     }
 

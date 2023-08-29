@@ -5,7 +5,13 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PartType, Test } from '@prisma/client';
 import { SCORE_TOIEC_READING } from './../common/constants/index';
-import { CreateTestDto, QueryDto, SubmitTestDto, UpdateTestDto } from './dtos';
+import {
+  CreateTestDto,
+  QueryDto,
+  QueryResultTestDto,
+  SubmitTestDto,
+  UpdateTestDto,
+} from './dtos';
 
 const PARTS = {
   1: PartType.PART1,
@@ -358,5 +364,49 @@ export class TestsService {
       }
       throw error;
     }
+  }
+
+  async getResults(userId: string, query: QueryResultTestDto) {
+    const { limit, page } = query;
+
+    const [total, results] = await this.prisma.$transaction([
+      this.prisma.testUser.count({
+        where: {
+          userId,
+        },
+      }),
+      this.prisma.testUser.findMany({
+        where: {
+          userId,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip: page && limit ? (page - 1) * limit : 0,
+        take: limit,
+        select: {
+          listeningCorrect: true,
+          listeningScore: true,
+          readingCorrect: true,
+          readingScore: true,
+          totalScore: true,
+          id: true,
+          testId: true,
+          test: {
+            select: {
+              name: true,
+              id: true,
+            },
+          },
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      results,
+    };
   }
 }

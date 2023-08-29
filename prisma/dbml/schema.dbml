@@ -1,0 +1,323 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table users {
+  id String [pk]
+  name String [not null]
+  email String [unique, not null]
+  password String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  avatar String
+  provider String [not null, default: 'local']
+  refreshToken String
+  status UserStatus [not null, default: 'ACTIVE']
+  roles String[] [not null]
+  testUser test_users [not null]
+  desks decks [not null]
+  flashcards flashcards [not null]
+  settingLearn setting_learns
+  File files [not null]
+  isTesting Boolean [default: false]
+  streaks streaks [not null]
+  numberFlashcadLearned count_flashcard_learneds [not null]
+}
+
+Table tests {
+  id String [pk]
+  name String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  audio String
+  parts parts [not null]
+  testUsers test_users [not null]
+  status TestStatus [not null, default: 'PUBLIC']
+  questions questions [not null]
+}
+
+Table national_tests {
+  id String [pk]
+  name String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  status TestStatus [not null, default: 'PUBLIC']
+  Questions questions [not null]
+}
+
+Table test_users {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  totalScore Int [not null]
+  listeningScore Int [not null]
+  readingScore Int [not null]
+  readingCorrect Int [not null]
+  listeningCorrect Int [not null]
+  numAttempt Int [not null]
+  testId String [not null]
+  test tests [not null]
+  userId String [not null]
+  user users [not null]
+  choices choices [not null]
+}
+
+Table choices {
+  id String [pk]
+  testUser test_users
+  testUserId String
+  answer answers
+  answerId String
+}
+
+Table parts {
+  id String [pk]
+  name String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  test tests [not null]
+  testId String [not null]
+  type PartType [not null]
+  questions questions [not null]
+}
+
+Table questions {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  part parts
+  partId String
+  image String [not null, default: '']
+  audio String [not null, default: '']
+  text String [not null, default: '']
+  transcript String [not null, default: '']
+  explain String [not null, default: '']
+  parentId String
+  parent questions
+  quesions questions [not null]
+  answers answers [not null]
+  grammar grammars
+  grammarId String
+  nationalTest national_tests
+  nationalTestId String
+  testId String
+  test tests
+  partType PartType
+}
+
+Table answers {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  question questions [not null]
+  questionId String [not null]
+  content String [not null]
+  isCorrect Boolean [not null, default: false]
+  choices choices [not null]
+}
+
+Table grammars {
+  id String [pk]
+  name String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  theory String [not null]
+  questions questions [not null]
+}
+
+Table topics {
+  id String [pk]
+  name String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  parentId String
+  parent topics
+  topics topics [not null]
+  words words [not null]
+  hasChild Boolean [not null, default: false]
+}
+
+Table words {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  topicId String
+  topic topics
+  name String [not null]
+  definition String
+  meaning String
+  examples String[] [not null]
+  image String
+  patchOfSpeech String
+  note String
+  pronunciation String
+  audios word_audios [not null]
+}
+
+Table word_audios {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  wordId String
+  word words
+  src String [not null]
+  region String [not null]
+  flashcard flashcards
+  flashcardId String
+}
+
+Table decks {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  userId String
+  user users
+  name String [not null]
+  flashcards flashcards [not null]
+  learnAt DateTime
+  numberFlashcadLearned count_flashcard_learneds [not null]
+
+  indexes {
+    (userId, name) [unique]
+  }
+}
+
+Table flashcards {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deckId String [not null]
+  deck decks [not null]
+  n Int [default: 0]
+  interval Float [default: 0]
+  efactor Float [default: 2.5]
+  name String
+  definition String
+  meaning String
+  examples String[] [not null]
+  image String
+  patchOfSpeech String
+  note String
+  pronunciation String
+  audios word_audios [not null]
+  user users [not null]
+  userId String [not null]
+  due DateTime [default: `now()`]
+  lastReviewed DateTime
+}
+
+Table setting_learns {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  maxFlashcardPerDay Int [not null, default: 20]
+  maxReviewPerDay Int [not null, default: 200]
+  isShuffle Boolean [not null, default: false]
+  autoPlayAudio Boolean [not null, default: false]
+  timePerFlashcard Int [not null, default: 60]
+  userId String [unique, not null]
+  user users [not null]
+}
+
+Table files {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  name String [not null]
+  url String [not null]
+  publicId String [not null]
+  userId String
+  user users
+}
+
+Table streaks {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  userId String
+  user users
+  date DateTime [not null]
+}
+
+Table count_flashcard_learneds {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  userId String
+  user users
+  date DateTime [unique, not null]
+  learned Int [not null, default: 0]
+  reviewed Int [not null, default: 0]
+  deckId String [not null]
+  deck decks [not null]
+
+  indexes {
+    (deckId, date) [unique]
+  }
+}
+
+Enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+Enum TestStatus {
+  PUBLIC
+  DRAFT
+}
+
+Enum PartType {
+  PART1
+  PART2
+  PART3
+  PART4
+  PART5
+  PART6
+  PART7
+}
+
+Ref: test_users.testId > tests.id [delete: Cascade]
+
+Ref: test_users.userId > users.id [delete: Cascade]
+
+Ref: choices.testUserId > test_users.id
+
+Ref: choices.answerId > answers.id
+
+Ref: parts.testId > tests.id [delete: Cascade]
+
+Ref: questions.partId > parts.id [delete: Cascade]
+
+Ref: questions.parentId - questions.id
+
+Ref: questions.grammarId > grammars.id
+
+Ref: questions.nationalTestId > national_tests.id
+
+Ref: questions.testId > tests.id
+
+Ref: answers.questionId > questions.id [delete: Cascade]
+
+Ref: topics.parentId - topics.id [delete: Cascade]
+
+Ref: words.topicId > topics.id [delete: Cascade]
+
+Ref: word_audios.wordId > words.id [delete: Cascade]
+
+Ref: word_audios.flashcardId > flashcards.id [delete: Cascade]
+
+Ref: decks.userId > users.id [delete: Cascade]
+
+Ref: flashcards.deckId > decks.id [delete: Cascade]
+
+Ref: flashcards.userId > users.id [delete: Cascade]
+
+Ref: setting_learns.userId - users.id [delete: Cascade]
+
+Ref: files.userId > users.id [delete: Cascade]
+
+Ref: streaks.userId > users.id [delete: Cascade]
+
+Ref: count_flashcard_learneds.userId > users.id [delete: Cascade]
+
+Ref: count_flashcard_learneds.deckId > decks.id [delete: Cascade]

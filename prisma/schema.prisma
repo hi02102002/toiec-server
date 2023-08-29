@@ -2,7 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "debian-openssl-3.0.x"]
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
 }
 
 datasource db {
@@ -27,13 +32,15 @@ model User {
   refreshToken String?    @map("refresh_token")
   status       UserStatus @default(ACTIVE)
 
-  roles        String[]      @default(["USER"])
-  testUser     TestUser[]
-  desks        Deck[]
-  flashcards   Flashcard[]
-  settingLearn SettingLearn?
-  File         File[]
-  isTesting    Boolean?      @default(false) @map("is_testing")
+  roles                 String[]                 @default(["USER"])
+  testUser              TestUser[]
+  desks                 Deck[]
+  flashcards            Flashcard[]
+  settingLearn          SettingLearn?
+  File                  File[]
+  isTesting             Boolean?                 @default(false) @map("is_testing")
+  streaks               Streak[]
+  numberFlashcadLearned NumberFlashcardLearned[]
 
   @@map("users")
 }
@@ -231,13 +238,15 @@ model WordAudio {
 }
 
 model Deck {
-  id         String      @id @default(uuid())
-  createdAt  DateTime    @default(now()) @map("created_at")
-  updatedAt  DateTime    @updatedAt @map("updated_at")
-  userId     String?     @map("user_id")
-  user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name       String
-  flashcards Flashcard[]
+  id                    String                   @id @default(uuid())
+  createdAt             DateTime                 @default(now()) @map("created_at")
+  updatedAt             DateTime                 @updatedAt @map("updated_at")
+  userId                String?                  @map("user_id")
+  user                  User?                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                  String
+  flashcards            Flashcard[]
+  learnAt               DateTime?                @map("learn_at")
+  numberFlashcadLearned NumberFlashcardLearned[]
 
   @@unique([userId, name])
   @@map("decks")
@@ -296,4 +305,31 @@ model File {
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("files")
+}
+
+model Streak {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+
+  @@map("streaks")
+}
+
+model NumberFlashcardLearned {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @unique @map("date")
+  learned   Int      @default(0)
+  reviewed  Int      @default(0)
+  deckId    String   @map("deck_id")
+  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+
+  @@unique([deckId, date])
+  @@map("count_flashcard_learneds")
 }

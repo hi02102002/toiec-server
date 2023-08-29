@@ -19,6 +19,7 @@ import {
   CreateTestDto,
   DeleteTestsDto,
   QueryDto,
+  QueryResultTestDto,
   SubmitTestDto,
   UpdateTestDto,
 } from './dtos';
@@ -49,6 +50,20 @@ export class TestsController {
         tests,
         total,
       },
+    });
+  }
+
+  @Get('/results')
+  @UseGuards(JwtAuthGuard)
+  async getResults(
+    @Res() res: Response,
+    @Req() req: IRequestWithUser,
+    @Query() query: QueryResultTestDto,
+  ) {
+    const data = await this.testsService.getResults(req.user.id, query);
+    res.status(HttpStatus.OK).json({
+      data,
+      message: 'Get results success',
     });
   }
 

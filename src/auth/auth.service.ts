@@ -188,6 +188,7 @@ export class AuthService {
       },
       data: {
         refreshToken: null,
+        isTesting: false,
       },
     });
   }

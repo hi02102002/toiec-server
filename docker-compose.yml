@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: toiec-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '4000:4000'
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+    restart: always
+    env_file:
+      - .env
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: toiec
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: always
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - '8080:8080'
+
+volumes:
+  postgres-data:

@@ -14,6 +14,7 @@ import { TopicsModule } from './topics/topics.module';
 import { DecksModule } from './decks/decks.module';
 import { FlashcardsModule } from './flashcards/flashcards.module';
 import { SettingsModule } from './settings/settings.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { SettingsModule } from './settings/settings.module';
     DecksModule,
     FlashcardsModule,
     SettingsModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [],
