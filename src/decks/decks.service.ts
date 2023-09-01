@@ -157,6 +157,7 @@ export class DecksService {
       data: {
         name,
         userId,
+        topicId,
       },
     });
 

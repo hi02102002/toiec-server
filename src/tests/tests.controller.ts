@@ -32,6 +32,7 @@ export class TestsController {
 
   @Post('/')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async create(@Body() body: CreateTestDto, @Res() res: Response) {
     const test = await this.testsService.create(body);
 
@@ -43,7 +44,6 @@ export class TestsController {
 
   @Get('/')
   @UseGuards(JwtAuthGuard)
-  @Roles(Role.ADMIN)
   async getAll(@Res() res: Response, @Query() query: QueryDto) {
     const { tests, total } = await this.testsService.getAll(query);
 
@@ -82,6 +82,7 @@ export class TestsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Patch('/:id')
   async update(
     @Res() res: Response,
@@ -97,6 +98,7 @@ export class TestsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Delete('/')
   async delete(@Res() res: Response, @Body() body: DeleteTestsDto) {
     await this.testsService.remove(body.ids);

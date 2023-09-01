@@ -27,10 +27,10 @@ export class DashboardController {
     });
   }
 
-  @Get('/admins')
+  @Get('/admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  async getAdminDashboard(@Res() res: Response, @Req() req: IRequestWithUser) {
+  async getAdminDashboard(@Res() res: Response) {
     const data = await this.dashboardService.getAdminDashboard();
 
     res.status(HttpStatus.OK).json({

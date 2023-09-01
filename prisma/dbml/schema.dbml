@@ -135,6 +135,7 @@ Table topics {
   topics topics [not null]
   words words [not null]
   hasChild Boolean [not null, default: false]
+  decks decks [not null]
 }
 
 Table words {
@@ -176,6 +177,8 @@ Table decks {
   flashcards flashcards [not null]
   learnAt DateTime
   numberFlashcadLearned count_flashcard_learneds [not null]
+  topicId String
+  topic topics
 
   indexes {
     (userId, name) [unique]
@@ -307,6 +310,8 @@ Ref: word_audios.wordId > words.id [delete: Cascade]
 Ref: word_audios.flashcardId > flashcards.id [delete: Cascade]
 
 Ref: decks.userId > users.id [delete: Cascade]
+
+Ref: decks.topicId > topics.id
 
 Ref: flashcards.deckId > decks.id [delete: Cascade]
 

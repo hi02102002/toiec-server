@@ -197,6 +197,7 @@ model Topic {
   topics    Topic[]  @relation("parents")
   words     Word[]
   hasChild  Boolean  @default(false) @map("has_child")
+  decks     Deck[]
 
   @@index([name])
   @@map("topics")
@@ -247,6 +248,8 @@ model Deck {
   flashcards            Flashcard[]
   learnAt               DateTime?                @map("learn_at")
   numberFlashcadLearned NumberFlashcardLearned[]
+  topicId               String?                  @map("topic_id")
+  topic                 Topic?                   @relation(fields: [topicId], references: [id])
 
   @@unique([userId, name])
   @@map("decks")
