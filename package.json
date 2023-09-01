@@ -24,7 +24,8 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:status": "prisma migrate status",
     "db:migrate:deploy": "prisma migrate deploy",
-    "dev": "docker compose up -d --build"
+    "db:generate": "npx prisma generate",
+    "dev": "docker compose up -d -V --build"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.0",
@@ -39,6 +40,7 @@
     "@react-email/render": "0.0.7",
     "@sendgrid/mail": "^7.7.0",
     "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "cloudinary": "^1.37.1",

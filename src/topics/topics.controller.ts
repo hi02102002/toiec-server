@@ -1,3 +1,6 @@
+import { JwtAuthGuard, RolesGuard } from '@/auth/guards';
+import { Roles } from '@/common/decorators';
+import { Role } from '@/common/types';
 import {
   Body,
   Controller,
@@ -9,11 +12,13 @@ import {
   Post,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import {
   CreateTopicDto,
   CreateWordDto,
+  ImportWordsDto,
   QueryTopicDto,
   UpdateTopicDto,
 } from './dto';
@@ -26,6 +31,8 @@ export class TopicsController {
   constructor(private readonly topicsService: TopicsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async createTopic(@Body() body: CreateTopicDto, @Res() res: Response) {
     const topic = await this.topicsService.createTopic(body);
     return res.status(HttpStatus.CREATED).json({
@@ -53,6 +60,8 @@ export class TopicsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async updateTopic(
     @Res() res: Response,
     @Body() body: UpdateTopicDto,
@@ -66,6 +75,8 @@ export class TopicsController {
   }
 
   @Delete('/words')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async deleteWords(@Res() res: Response, @Body() body: { ids: string[] }) {
     await this.topicsService.deleteWords(body.ids);
     return res.status(HttpStatus.OK).json({
@@ -75,6 +86,8 @@ export class TopicsController {
   }
 
   @Delete('/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async deleteTopic(@Res() res: Response, @Param('id') id: string) {
     const topic = await this.topicsService.deleteTopic(id);
     return res.status(HttpStatus.OK).json({
@@ -84,6 +97,8 @@ export class TopicsController {
   }
 
   @Delete()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async deleteTopics(@Res() res: Response, @Body() body: { ids: string[] }) {
     const topics = await this.topicsService.deleteTopics(body.ids);
     return res.status(HttpStatus.OK).json({
@@ -93,6 +108,8 @@ export class TopicsController {
   }
 
   @Post('/:id/words')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async createWord(
     @Res() res: Response,
     @Param('id') id: string,
@@ -119,6 +136,8 @@ export class TopicsController {
   }
 
   @Patch('/words/:wordId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async updateWord(
     @Res() res: Response,
     @Param('wordId') wordId: string,
@@ -128,6 +147,17 @@ export class TopicsController {
     return res.status(HttpStatus.OK).json({
       message: 'Word updated successfully',
       data,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Post('/words/import')
+  async importWords(@Res() res: Response, @Body() body: ImportWordsDto) {
+    await this.topicsService.importWords(body);
+    return res.status(HttpStatus.OK).json({
+      message: 'Words imported successfully',
+      data: null,
     });
   }
 }

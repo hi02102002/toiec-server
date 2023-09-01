@@ -1,4 +1,6 @@
-import { JwtAuthGuard } from '@/auth/guards';
+import { JwtAuthGuard, RolesGuard } from '@/auth/guards';
+import { Roles } from '@/common/decorators';
+import { Role } from '@/common/types';
 import {
   Body,
   Controller,
@@ -15,6 +17,7 @@ import {
 import { Response } from 'express';
 import {
   CreateQuestionDto,
+  ImportJsonDto,
   QueryQuestionsDto,
   RemoveQuestionsDto,
   UpdateQuestionDto,
@@ -25,8 +28,9 @@ import { QuestionsService } from './questions.service';
 export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post('/')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async createQuestion(
     @Body() fields: CreateQuestionDto,
     @Res() res: Response,
@@ -39,8 +43,8 @@ export class QuestionsController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('/')
+  @UseGuards(JwtAuthGuard)
   async getAllQuestions(
     @Res() res: Response,
     @Query() query: QueryQuestionsDto,
@@ -56,6 +60,7 @@ export class QuestionsController {
   }
 
   @Get('/:id')
+  @UseGuards(JwtAuthGuard)
   async getQuestion(@Res() res: Response, @Param('id') id: string) {
     const question = await this.questionsService.getQuestion(id);
 
@@ -65,8 +70,9 @@ export class QuestionsController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async updateQuestion(
     @Res() res: Response,
     @Body() fields: UpdateQuestionDto,
@@ -80,8 +86,9 @@ export class QuestionsController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('/')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async removeQuestions(
     @Res() res: Response,
     @Body() fields: RemoveQuestionsDto,
@@ -90,6 +97,18 @@ export class QuestionsController {
 
     res.status(HttpStatus.OK).json({
       message: 'Remove questions successfully',
+      data: null,
+    });
+  }
+
+  @Post('/import')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async importQuestions(@Res() res: Response, @Body() fields: ImportJsonDto) {
+    await this.questionsService.importQuestions(fields);
+
+    res.status(HttpStatus.OK).json({
+      message: 'Import questions successfully',
       data: null,
     });
   }

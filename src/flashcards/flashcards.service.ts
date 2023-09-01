@@ -205,11 +205,11 @@ export class FlashcardsService {
         },
       });
 
-    const maxFlashcardLearnPerDay = currentLearned.learned
+    const maxFlashcardLearnPerDay = currentLearned?.learned
       ? settings?.maxFlashcardPerDay - currentLearned.learned
       : settings?.maxFlashcardPerDay;
 
-    const maxReviewPerDay = currentLearned.reviewed
+    const maxReviewPerDay = currentLearned?.reviewed
       ? settings?.maxReviewPerDay - currentLearned.reviewed
       : settings?.maxReviewPerDay;
 

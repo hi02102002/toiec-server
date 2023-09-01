@@ -1,5 +1,6 @@
-import { JwtAuthGuard } from '@/auth/guards';
-import { IRequestWithUser } from '@/common/types';
+import { JwtAuthGuard, RolesGuard } from '@/auth/guards';
+import { Roles } from '@/common/decorators';
+import { IRequestWithUser, Role } from '@/common/types';
 import {
   Controller,
   Get,
@@ -27,6 +28,8 @@ export class DashboardController {
   }
 
   @Get('/admins')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async getAdminDashboard(@Res() res: Response, @Req() req: IRequestWithUser) {
     const data = await this.dashboardService.getAdminDashboard();
 

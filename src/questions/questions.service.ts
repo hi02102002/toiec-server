@@ -1,8 +1,12 @@
-import { LIMIT_QUESTIONS_PART } from '@/common/constants';
 import { PrismaService } from '@/prisma/prisma.service';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   CreateQuestionDto,
+  ImportJsonDto,
   QueryQuestionsDto,
   RemoveQuestionsDto,
   UpdateQuestionDto,
@@ -26,18 +30,6 @@ export class QuestionsService {
       testId,
     } = fields;
 
-    if (!parentId) {
-      const total = await this.prismaService.question.count({
-        where: {
-          partId,
-        },
-      });
-
-      if (total >= LIMIT_QUESTIONS_PART[partType]) {
-        throw new BadRequestException('Enough questions for this part');
-      }
-    }
-
     const question = await this.prismaService.question.create({
       data: {
         audio,
@@ -56,6 +48,7 @@ export class QuestionsService {
             }
           : undefined,
         testId,
+        partType,
       },
     });
 
@@ -194,5 +187,64 @@ export class QuestionsService {
     });
 
     return questions;
+  }
+
+  async importQuestions(fields: ImportJsonDto) {
+    const { questions, partId, partType, testId } = fields;
+
+    const [test, part] = await this.prismaService.$transaction([
+      this.prismaService.test.findUnique({
+        where: {
+          id: testId,
+        },
+      }),
+      this.prismaService.part.findUnique({
+        where: {
+          id: partId,
+        },
+      }),
+    ]);
+
+    if (!test) {
+      throw new NotFoundException('Test not found');
+    }
+
+    if (!part) {
+      throw new NotFoundException('Part not found');
+    }
+
+    if (part.type !== partType) {
+      throw new BadRequestException('Part type not match');
+    }
+
+    for (const q of questions) {
+      const { questions: subQuestions, ...question } = q;
+      const _question = await this.createQuestion({
+        ...question,
+        partId,
+        testId,
+        partType,
+        parentId: undefined,
+        grammarId: null,
+      });
+
+      if (subQuestions?.length > 0) {
+        for (const sq of subQuestions) {
+          const child = await this.createQuestion({
+            ...sq,
+            partId: undefined,
+            testId,
+            partType,
+            parentId: _question.id,
+            grammarId: null,
+          });
+
+          console.log({
+            parentId: _question.id,
+            childId: child.id,
+          });
+        }
+      }
+    }
   }
 }

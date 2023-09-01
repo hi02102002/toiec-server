@@ -24,11 +24,11 @@ import {
 } from './dtos';
 
 @Controller('decks')
+@UseGuards(JwtAuthGuard)
 export class DecksController {
   constructor(private readonly decksService: DecksService) {}
 
   @Get()
-  @UseGuards(JwtAuthGuard)
   async getDecks(
     @Res() res: Response,
     @Req() req: IRequestWithUser,
@@ -43,7 +43,6 @@ export class DecksController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
   async createDeck(
     @Body() body: CreateDeckDto,
     @Res() res: Response,
@@ -57,7 +56,6 @@ export class DecksController {
     });
   }
   @Get('/:id')
-  @UseGuards(JwtAuthGuard)
   async getDeck(
     @Res() res: Response,
     @Req() req: IRequestWithUser,
@@ -72,7 +70,6 @@ export class DecksController {
   }
 
   @Delete('/:id')
-  @UseGuards(JwtAuthGuard)
   async removeDeck(
     @Res() res: Response,
     @Req() req: IRequestWithUser,
@@ -87,7 +84,6 @@ export class DecksController {
   }
 
   @Patch('/:id')
-  @UseGuards(JwtAuthGuard)
   async updateDeck(
     @Res() res: Response,
     @Req() req: IRequestWithUser,
@@ -103,7 +99,6 @@ export class DecksController {
   }
 
   @Post('/from-topic')
-  @UseGuards(JwtAuthGuard)
   async createDeckFromTopic(
     @Body() body: CreateDeckFromTopicDto,
     @Res() res: Response,

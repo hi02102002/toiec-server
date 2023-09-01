@@ -1,4 +1,6 @@
-import { JwtAuthGuard } from '@/auth/guards';
+import { JwtAuthGuard, RolesGuard } from '@/auth/guards';
+import { Roles } from '@/common/decorators';
+import { Role } from '@/common/types';
 import { RemoveQuestionsDto } from '@/questions/dtos';
 import {
   Body,
@@ -22,6 +24,7 @@ export class GrammarsController {
   constructor(private readonly grammarsService: GrammarsService) {}
 
   @Get('/')
+  @UseGuards(JwtAuthGuard)
   async getAllGrammars(@Query() query: QueryDto, @Res() res: Response) {
     const data = await this.grammarsService.getAllGrammars(query);
 
@@ -31,8 +34,9 @@ export class GrammarsController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('/')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async createGrammarLesson(
     @Body() fields: CreateGrammarDto,
     @Res() res: Response,
@@ -45,8 +49,9 @@ export class GrammarsController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async updateGrammar(
     @Body() fields: UpdateGrammarDto,
     @Res() res: Response,
@@ -59,8 +64,9 @@ export class GrammarsController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('/')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async deleteGrammars(
     @Body() fields: RemoveQuestionsDto,
     @Res() res: Response,
@@ -74,6 +80,7 @@ export class GrammarsController {
   }
 
   @Get('/:id')
+  @UseGuards(JwtAuthGuard)
   async getGrammar(@Param('id') id: string, @Res() res: Response) {
     const data = await this.grammarsService.getGrammar(id);
 

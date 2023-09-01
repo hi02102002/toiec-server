@@ -20,11 +20,11 @@ import { QueryFlashcardDto } from './dtos/query-flashcard.dto';
 import { FlashcardsService } from './flashcards.service';
 
 @Controller('flashcards')
+@UseGuards(JwtAuthGuard)
 export class FlashcardsController {
   constructor(private readonly flashcardsService: FlashcardsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
   async createFlashcard(
     @Res() res: Response,
     @Req() req: IRequestWithUser,
@@ -42,7 +42,6 @@ export class FlashcardsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
   async getFlashcards(
     @Res() res: Response,
     @Req() req: IRequestWithUser,
@@ -57,7 +56,6 @@ export class FlashcardsController {
   }
 
   @Get('/chart')
-  @UseGuards(JwtAuthGuard)
   async getFlashcardsChart(
     @Req() req: IRequestWithUser,
     @Query() query: QueryChartDto,
@@ -75,7 +73,6 @@ export class FlashcardsController {
   }
 
   @Patch('/:id')
-  @UseGuards(JwtAuthGuard)
   async updateFlashcard(
     @Res() res: Response,
     @Req() req: IRequestWithUser,
@@ -95,7 +92,6 @@ export class FlashcardsController {
   }
 
   @Delete('/:id')
-  @UseGuards(JwtAuthGuard)
   async deleteFlashcard(
     @Res() res: Response,
     @Req() req: IRequestWithUser,
@@ -110,7 +106,6 @@ export class FlashcardsController {
   }
 
   @Get('/learn/:deckId')
-  @UseGuards(JwtAuthGuard)
   async getFlashcardsToLearn(
     @Req() req: IRequestWithUser,
     @Param('deckId') deckId: string,

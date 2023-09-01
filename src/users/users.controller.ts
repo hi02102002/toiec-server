@@ -1,5 +1,6 @@
-import { JwtAuthGuard } from '@/auth/guards';
-import { IRequestWithUser } from '@/common/types';
+import { JwtAuthGuard, RolesGuard } from '@/auth/guards';
+import { Roles } from '@/common/decorators';
+import { IRequestWithUser, Role } from '@/common/types';
 import {
   Body,
   Controller,
@@ -23,7 +24,8 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('/')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async getAllUsers(
     @Res() res: Response,
     @Query() query: QueryDto,
@@ -38,7 +40,8 @@ export class UsersController {
   }
 
   @Patch('/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async updateUser(
     @Res() res: Response,
     @Param('id') id: string,

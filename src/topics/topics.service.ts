@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   CreateTopicDto,
   CreateWordDto,
+  ImportWordsDto,
   QueryTopicDto,
   UpdateTopicDto,
 } from './dto';
@@ -171,6 +172,8 @@ export class TopicsService {
       },
     });
 
+    console.log(word);
+
     return word;
   }
 
@@ -274,5 +277,37 @@ export class TopicsService {
         },
       },
     });
+  }
+
+  async importWords(fields: ImportWordsDto) {
+    const { topicId, words } = fields;
+
+    const topic = await this.prisma.topic.findUnique({
+      where: {
+        id: topicId,
+      },
+    });
+
+    if (!topic) {
+      throw new NotFoundException('Topic not found');
+    }
+
+    const newWords = await this.prisma.word.createMany({
+      data: words.map((word) => ({
+        name: word.name,
+        definition: word.definition,
+        meaning: word.meaning,
+        examples: {
+          set: word.examples,
+        },
+        image: word.image || null,
+        patchOfSpeech: word.patchOfSpeech,
+        note: word.note,
+        pronunciation: word.pronunciation,
+        topicId,
+      })),
+    });
+
+    return newWords;
   }
 }

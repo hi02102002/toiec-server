@@ -4,11 +4,11 @@
       "previewLimit": 50,
       "server": "postgres",
       "port": 5432,
-      "askForPassword": true,
       "driver": "PostgreSQL",
       "name": "toiec",
       "database": "toiec",
-      "username": "postgres"
+      "username": "postgres",
+      "password": "postgres"
     }
   ]
 }

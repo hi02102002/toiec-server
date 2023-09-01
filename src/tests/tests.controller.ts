@@ -1,5 +1,6 @@
-import { JwtAuthGuard } from '@/auth/guards';
-import { IRequestWithUser } from '@/common/types';
+import { JwtAuthGuard, RolesGuard } from '@/auth/guards';
+import { Roles } from '@/common/decorators';
+import { IRequestWithUser, Role } from '@/common/types';
 import {
   Body,
   Controller,
@@ -30,7 +31,7 @@ export class TestsController {
   constructor(private readonly testsService: TestsService) {}
 
   @Post('/')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async create(@Body() body: CreateTestDto, @Res() res: Response) {
     const test = await this.testsService.create(body);
 
@@ -41,6 +42,8 @@ export class TestsController {
   }
 
   @Get('/')
+  @UseGuards(JwtAuthGuard)
+  @Roles(Role.ADMIN)
   async getAll(@Res() res: Response, @Query() query: QueryDto) {
     const { tests, total } = await this.testsService.getAll(query);
 
@@ -68,6 +71,7 @@ export class TestsController {
   }
 
   @Get('/:id')
+  @UseGuards(JwtAuthGuard)
   async getOneTest(@Res() res: Response, @Param('id') id: string) {
     const test = await this.testsService.getOne(id);
 
@@ -77,7 +81,7 @@ export class TestsController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Patch('/:id')
   async update(
     @Res() res: Response,
@@ -92,7 +96,7 @@ export class TestsController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Delete('/')
   async delete(@Res() res: Response, @Body() body: DeleteTestsDto) {
     await this.testsService.remove(body.ids);
