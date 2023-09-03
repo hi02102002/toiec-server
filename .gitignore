@@ -38,3 +38,4 @@ data-crawl
 postgres-data
 
 #env
+.env
