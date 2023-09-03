@@ -366,8 +366,8 @@ export class TestsService {
     }
   }
 
-  async getResults(userId: string, query: QueryResultTestDto) {
-    const { limit, page } = query;
+  async getResults(userId: string, query?: QueryResultTestDto) {
+    const { limit, page } = query || {};
 
     const [total, results] = await this.prisma.$transaction([
       this.prisma.testUser.count({
@@ -408,5 +408,53 @@ export class TestsService {
       total,
       results,
     };
+  }
+
+  async getTestForChart(userId: string) {
+    const tests = await this.prisma.testUser.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        test: {
+          select: {
+            name: true,
+            id: true,
+          },
+        },
+        listeningScore: true,
+        readingScore: true,
+        totalScore: true,
+        createdAt: true,
+        id: true,
+      },
+    });
+
+    return tests;
+  }
+
+  async getRecentTests(userId: string) {
+    const tests = await this.prisma.testUser.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        test: {
+          select: {
+            name: true,
+            id: true,
+            createdAt: true,
+          },
+        },
+        id: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 5,
+      distinct: ['testId'],
+    });
+
+    return tests;
   }
 }

@@ -179,4 +179,30 @@ export class DecksService {
 
     return deck;
   }
+
+  async getRecentDecks(userId: string) {
+    const decks = await this.prismaService.deck.findMany({
+      where: {
+        userId,
+        NOT: {
+          learnAt: null,
+        },
+      },
+      select: {
+        name: true,
+        id: true,
+        _count: {
+          select: {
+            flashcards: true,
+          },
+        },
+      },
+      orderBy: {
+        learnAt: 'desc',
+      },
+      take: 5,
+    });
+
+    return decks;
+  }
 }

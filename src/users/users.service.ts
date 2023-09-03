@@ -1,4 +1,6 @@
+import { DecksService } from '@/decks/decks.service';
 import { PrismaService } from '@/prisma/prisma.service';
+import { TestsService } from '@/tests/tests.service';
 import {
   BadRequestException,
   Injectable,
@@ -10,7 +12,11 @@ import { ChangePasswordDto, QueryDto, UpdateUserDto } from './dtos';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly testsService: TestsService,
+    private readonly decksService: DecksService,
+  ) {}
 
   async findOne(email: string) {
     try {
@@ -222,5 +228,42 @@ export class UsersService {
     });
 
     return user;
+  }
+
+  async getUserById(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        avatar: true,
+        createdAt: true,
+        email: true,
+        name: true,
+        provider: true,
+        roles: true,
+        status: true,
+        updatedAt: true,
+        id: true,
+        isTesting: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User with this id not found');
+    }
+
+    const [recentTests, recentDecks, resultsTest] = await Promise.all([
+      this.testsService.getRecentTests(userId),
+      this.decksService.getRecentDecks(userId),
+      this.testsService.getResults(userId),
+    ]);
+
+    return {
+      user,
+      recentTests,
+      recentDecks,
+      resultsTest,
+    };
   }
 }

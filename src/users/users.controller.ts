@@ -39,6 +39,18 @@ export class UsersController {
     });
   }
 
+  @Get('/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async getUserById(@Res() res: Response, @Param('id') id: string) {
+    const data = await this.usersService.getUserById(id);
+
+    res.status(HttpStatus.OK).json({
+      message: 'Get user by id successfully',
+      data,
+    });
+  }
+
   @Patch('/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)

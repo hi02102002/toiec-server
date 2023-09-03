@@ -1,3 +1,4 @@
+import { MailModule } from '@/mail/mail.module';
 import { PrismaModule } from '@/prisma/prisma.module';
 import { SettingsModule } from '@/settings/settings.module';
 import { UsersModule } from '@/users/users.module';
@@ -22,6 +23,13 @@ import {
     SocialStrategy,
     RefreshTokenStrategy,
   ],
-  imports: [UsersModule, PrismaModule, JwtModule, ConfigModule, SettingsModule],
+  imports: [
+    UsersModule,
+    PrismaModule,
+    JwtModule,
+    ConfigModule,
+    SettingsModule,
+    MailModule,
+  ],
 })
 export class AuthModule {}

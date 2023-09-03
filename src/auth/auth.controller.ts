@@ -13,7 +13,13 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
-import { RegisterDto, UpdateEmailDto, UpdateProfileDto } from './dtos';
+import {
+  RegisterDto,
+  RequestResetPasswordDto,
+  ResetPasswordDto,
+  UpdateEmailDto,
+  UpdateProfileDto,
+} from './dtos';
 import {
   JwtAuthGuard,
   LocalAuthGuard,
@@ -153,6 +159,28 @@ export class AuthController {
     res.status(HttpStatus.OK).json({
       message: 'Update your email successfully',
       data,
+    });
+  }
+
+  @Post('/request-reset-password')
+  async requestResetPassword(
+    @Res() res: Response,
+    @Body() body: RequestResetPasswordDto,
+  ) {
+    await this.authService.requestResetPassword(body);
+
+    res.status(HttpStatus.OK).json({
+      message:
+        'Send request to reset your password successfully. Please check your email',
+    });
+  }
+
+  @Post('/reset-password')
+  async resetPassword(@Res() res: Response, @Body() body: ResetPasswordDto) {
+    await this.authService.resetPassword(body);
+
+    res.status(HttpStatus.OK).json({
+      message: 'Reset your password successfully',
     });
   }
 }

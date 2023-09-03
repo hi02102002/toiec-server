@@ -7,5 +7,6 @@ import { DecksService } from './decks.service';
   controllers: [DecksController],
   providers: [DecksService],
   imports: [PrismaModule],
+  exports: [DecksService],
 })
 export class DecksModule {}

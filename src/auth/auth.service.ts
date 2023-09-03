@@ -1,4 +1,5 @@
 import { Role } from '@/common/types';
+import { MailService } from '@/mail/mail.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { SettingsService } from '@/settings/settings.service';
 import { UsersService } from '@/users/users.service';
@@ -17,6 +18,8 @@ import {
   LoginDto,
   LoginSocialDto,
   RegisterDto,
+  RequestResetPasswordDto,
+  ResetPasswordDto,
   UpdateEmailDto,
   UpdateProfileDto,
 } from './dtos';
@@ -31,6 +34,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly settingsService: SettingsService,
+    private readonly mailService: MailService,
   ) {}
 
   async getMe(id: string) {
@@ -263,5 +267,99 @@ export class AuthService {
     });
 
     return updatedUser;
+  }
+
+  async resetPassword(fields: ResetPasswordDto) {
+    const { token, password } = fields;
+
+    try {
+      await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get<string>('JWT_REFRESH_PASSWORD_SECRET'),
+      });
+    } catch (error) {
+      console.log(error);
+      throw new HttpException('Token is invalid', 400);
+    }
+
+    const decodedToken = this.jwtService.decode(token) as {
+      email: string;
+    };
+
+    const user = await this.usersService.findOne(decodedToken.email);
+
+    if (!user) {
+      throw new NotFoundException('User with this token not found');
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+
+    const updatedUser = await this.prismaService.user.update({
+      where: {
+        email: decodedToken.email,
+      },
+      data: {
+        password: hashed,
+        refeshPasswordToken: null,
+        refreshToken: null,
+      },
+      select: {
+        avatar: true,
+        createdAt: true,
+        email: true,
+        name: true,
+        provider: true,
+        roles: true,
+        status: true,
+        updatedAt: true,
+        id: true,
+        isTesting: true,
+      },
+    });
+
+    return updatedUser;
+  }
+
+  async requestResetPassword(fields: RequestResetPasswordDto) {
+    const user = await this.usersService.findOne(fields.email);
+
+    if (!user) {
+      throw new NotFoundException('User with this email not found');
+    }
+    if (user.provider !== 'local') {
+      throw new BadRequestException(
+        'This account is using by another provider. Please login with your social account',
+      );
+    }
+
+    const token = await this.jwtService.signAsync(
+      {
+        email: fields.email,
+      },
+      {
+        secret: this.configService.get<string>('JWT_REFRESH_PASSWORD_SECRET'),
+        expiresIn: '15m',
+      },
+    );
+
+    await this.prismaService.user.update({
+      data: {
+        refeshPasswordToken: token,
+      },
+      where: {
+        email: fields.email,
+      },
+    });
+
+    const url = `http://localhost:3000/reset-password?token=${token}`;
+
+    await this.mailService.sendMail({
+      to: fields.email,
+      subject: 'Reset password',
+      template: 'reset_password',
+      context: {
+        url,
+        username: user.name,
+      },
+    });
   }
 }

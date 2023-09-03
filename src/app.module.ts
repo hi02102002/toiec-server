@@ -1,4 +1,5 @@
 import configuration from '@/common/config/configuration';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -9,6 +10,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { DecksModule } from './decks/decks.module';
 import { FlashcardsModule } from './flashcards/flashcards.module';
 import { GrammarsModule } from './grammars/grammars.module';
+import { ReactAdapter } from './mail/adapter';
+import { MailModule } from './mail/mail.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QuestionsModule } from './questions/questions.module';
 import { SettingsModule } from './settings/settings.module';
@@ -16,6 +19,8 @@ import { TestsModule } from './tests/tests.module';
 import { TopicsModule } from './topics/topics.module';
 import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
+
+console.log(process.cwd() + '/templates/');
 @Module({
   imports: [
     AuthModule,
@@ -35,6 +40,14 @@ import { UsersModule } from './users/users.module';
     FlashcardsModule,
     SettingsModule,
     DashboardModule,
+    MailModule,
+    MailerModule.forRoot({
+      transport: 'smtps://user@domain.com:pass@smtp.domain.com',
+      template: {
+        dir: __dirname + '/templates/',
+        adapter: new ReactAdapter(),
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [],

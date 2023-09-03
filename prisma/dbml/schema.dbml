@@ -12,6 +12,8 @@ Table users {
   avatar String
   provider String [not null, default: 'local']
   refreshToken String
+  refeshPasswordToken String
+  isEmailVerified Boolean [not null, default: false]
   status UserStatus [not null, default: 'ACTIVE']
   roles String[] [not null]
   testUser test_users [not null]
