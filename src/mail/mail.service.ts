@@ -47,7 +47,7 @@ export class MailService {
   public async sendMail(options: {
     to: string;
     subject: string;
-    template: 'reset_password';
+    template: 'reset_password' | 'verify_account';
     context: Record<string, unknown>;
   }) {
     try {

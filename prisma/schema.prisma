@@ -43,8 +43,23 @@ model User {
   isTesting             Boolean?                 @default(false) @map("is_testing")
   streaks               Streak[]
   numberFlashcadLearned NumberFlashcardLearned[]
+  codeTokens            CodeToken[]
 
   @@map("users")
+}
+
+model CodeToken {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String
+  type      String
+  expiredAt DateTime @map("expired_at")
+  secret    String
+
+  @@map("code_tokens")
 }
 
 enum TestStatus {

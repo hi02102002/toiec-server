@@ -15,11 +15,12 @@ import { Response } from 'express';
 import { AuthService } from './auth.service';
 import {
   RegisterDto,
-  RequestResetPasswordDto,
   ResetPasswordDto,
+  SendEmailDto,
   UpdateEmailDto,
   UpdateProfileDto,
 } from './dtos';
+import { VerifyAccountDto } from './dtos/verify-account.dto';
 import {
   JwtAuthGuard,
   LocalAuthGuard,
@@ -73,7 +74,8 @@ export class AuthController {
     const user = await this.authService.register(registerDto);
 
     res.status(HttpStatus.CREATED).json({
-      message: 'Create account successfully',
+      message:
+        'Create your account successfully. Please verify your email to login',
       data: user,
     });
   }
@@ -163,10 +165,7 @@ export class AuthController {
   }
 
   @Post('/request-reset-password')
-  async requestResetPassword(
-    @Res() res: Response,
-    @Body() body: RequestResetPasswordDto,
-  ) {
+  async requestResetPassword(@Res() res: Response, @Body() body: SendEmailDto) {
     await this.authService.requestResetPassword(body);
 
     res.status(HttpStatus.OK).json({
@@ -181,6 +180,25 @@ export class AuthController {
 
     res.status(HttpStatus.OK).json({
       message: 'Reset your password successfully',
+    });
+  }
+
+  @Post('request-verify-account')
+  async requestVerifyAccount(@Res() res: Response, @Body() body: SendEmailDto) {
+    await this.authService.sendMailVerifyAccount(body.email);
+
+    res.status(HttpStatus.OK).json({
+      message:
+        'Sent email to verify your account successfully. Please check your email',
+    });
+  }
+
+  @Post('verify-account')
+  async verifyAccount(@Res() res: Response, @Body() body: VerifyAccountDto) {
+    await this.authService.verifyAccount(body.code.toString());
+
+    res.status(HttpStatus.OK).json({
+      message: 'Verify your account successfully',
     });
   }
 }

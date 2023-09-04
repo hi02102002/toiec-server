@@ -14,12 +14,13 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { omit } from 'lodash';
+import * as speakeasy from 'speakeasy';
 import {
   LoginDto,
   LoginSocialDto,
   RegisterDto,
-  RequestResetPasswordDto,
   ResetPasswordDto,
+  SendEmailDto,
   UpdateEmailDto,
   UpdateProfileDto,
 } from './dtos';
@@ -66,6 +67,11 @@ export class AuthService {
   async validateUser(fields: LoginDto) {
     const { email, password } = fields;
     const user = await this.usersService.findOne(email);
+
+    if (!user.isEmailVerified) {
+      throw new BadRequestException('Please verify your email', 'EMAIL_VERIFY');
+    }
+
     if (!user) {
       throw new BadRequestException('User with this email not found');
     }
@@ -112,6 +118,8 @@ export class AuthService {
 
     await this.settingsService.initSettings(user.id);
 
+    await this.sendMailVerifyAccount(email);
+
     return omit(user, ['password']);
   }
 
@@ -128,6 +136,7 @@ export class AuthService {
           avatar,
           provider,
           roles: [Role.USER],
+          isEmailVerified: true,
         },
       });
 
@@ -319,7 +328,7 @@ export class AuthService {
     return updatedUser;
   }
 
-  async requestResetPassword(fields: RequestResetPasswordDto) {
+  async requestResetPassword(fields: SendEmailDto) {
     const user = await this.usersService.findOne(fields.email);
 
     if (!user) {
@@ -359,6 +368,89 @@ export class AuthService {
       context: {
         url,
         username: user.name,
+      },
+    });
+  }
+
+  async sendMailVerifyAccount(email: string) {
+    const user = await this.usersService.findOne(email);
+
+    if (!user) {
+      throw new NotFoundException('User with this email not found');
+    }
+
+    if (user.isEmailVerified) {
+      throw new BadRequestException('Your email is verified');
+    }
+
+    const secret = speakeasy.generateSecret({
+      length: 20,
+    });
+
+    const code = speakeasy.totp({
+      secret: secret.base32,
+      encoding: 'base32',
+    });
+
+    await this.prismaService.codeToken.create({
+      data: {
+        expiredAt: new Date(Date.now() + 1000 * 60 * 15),
+        code,
+        type: 'verify_account',
+        userId: user.id,
+        secret: secret.base32,
+      },
+    });
+
+    await this.mailService.sendMail({
+      to: email,
+      subject: 'Verify email',
+      template: 'verify_account',
+      context: {
+        username: user.name,
+        code,
+      },
+    });
+  }
+
+  async verifyAccount(code: string) {
+    const codeToken = await this.prismaService.codeToken.findFirst({
+      where: {
+        code,
+        type: 'verify_account',
+      },
+    });
+
+    if (!codeToken) {
+      throw new BadRequestException('Invalid code');
+    }
+
+    if (codeToken.expiredAt < new Date()) {
+      throw new BadRequestException('Your code is expired. Please try again');
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: codeToken.secret,
+      encoding: 'base32',
+      token: code,
+    });
+
+    if (!verified) {
+      throw new BadRequestException('Invalid code');
+    }
+    await this.prismaService.user.update({
+      where: {
+        id: codeToken.userId,
+      },
+      data: {
+        isEmailVerified: true,
+      },
+    });
+
+    await this.prismaService.codeToken.deleteMany({
+      where: {
+        userId: codeToken.userId,
+        type: 'verify_account',
       },
     });
   }

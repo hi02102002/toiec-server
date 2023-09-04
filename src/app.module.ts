@@ -44,7 +44,7 @@ console.log(process.cwd() + '/templates/');
     MailerModule.forRoot({
       transport: 'smtps://user@domain.com:pass@smtp.domain.com',
       template: {
-        dir: __dirname + '/templates/',
+        dir: __dirname + '/mail/templates/',
         adapter: new ReactAdapter(),
       },
     }),

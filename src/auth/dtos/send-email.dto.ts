@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class RequestResetPasswordDto {
+export class SendEmailDto {
   @IsString()
   @IsNotEmpty({
     message: 'Email is required',

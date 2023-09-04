@@ -24,6 +24,19 @@ Table users {
   isTesting Boolean [default: false]
   streaks streaks [not null]
   numberFlashcadLearned count_flashcard_learneds [not null]
+  codeTokens code_tokens [not null]
+}
+
+Table code_tokens {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  userId String [not null]
+  user users [not null]
+  code String [not null]
+  type String [not null]
+  expiredAt DateTime [not null]
+  secret String [not null]
 }
 
 Table tests {
@@ -280,6 +293,8 @@ Enum PartType {
   PART6
   PART7
 }
+
+Ref: code_tokens.userId > users.id [delete: Cascade]
 
 Ref: test_users.testId > tests.id [delete: Cascade]
 
