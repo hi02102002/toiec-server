@@ -12,6 +12,7 @@ import {
   SubmitTestDto,
   UpdateTestDto,
 } from './dtos';
+import dayjs from 'dayjs';
 
 const PARTS = {
   1: PartType.PART1,
@@ -290,6 +291,25 @@ export class TestsService {
             })),
           },
         },
+      },
+    });
+
+    const timestamp = dayjs()
+      .set('hour', 0)
+      .set('minute', 0)
+      .set('second', 0)
+      .toDate();
+
+    await this.prisma.activity.upsert({
+      where: {
+        timestamp,
+      },
+      update: {
+        timestamp,
+      },
+      create: {
+        timestamp,
+        userId,
       },
     });
 

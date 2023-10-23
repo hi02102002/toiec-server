@@ -14,6 +14,8 @@ COPY  package*.json ./
 
 # Install app dependencies using the `npm ci` command instead of `npm install`
 RUN npm ci
+RUN npm uninstall bcrypt
+RUN npm install bcrypt
 
 # Bundle app source
 COPY . .

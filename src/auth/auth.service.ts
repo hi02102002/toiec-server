@@ -68,7 +68,11 @@ export class AuthService {
     const { email, password } = fields;
     const user = await this.usersService.findOne(email);
 
-    if (!user.isEmailVerified) {
+    if (!user) {
+      throw new BadRequestException('User with this email not found');
+    }
+
+    if (!user?.isEmailVerified && user.provider === 'local') {
       throw new BadRequestException('Please verify your email', 'EMAIL_VERIFY');
     }
 
@@ -453,5 +457,32 @@ export class AuthService {
         type: 'verify_account',
       },
     });
+  }
+
+  async registerAdminAccount(fields: RegisterDto) {
+    const { email, password, name } = fields;
+
+    const userExist = await this.usersService.findOne(email);
+
+    if (userExist) {
+      throw new HttpException('This email is using by another user', 409);
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+
+    const user = await this.prismaService.user.create({
+      data: {
+        email,
+        name,
+        password: hashed,
+        provider: 'local',
+        roles: [Role.ADMIN],
+        isEmailVerified: true,
+      },
+    });
+
+    await this.settingsService.initSettings(user.id);
+
+    return omit(user, ['password', 'refreshToken', 'refeshPasswordToken']);
   }
 }

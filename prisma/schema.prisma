@@ -41,9 +41,9 @@ model User {
   settingLearn          SettingLearn?
   File                  File[]
   isTesting             Boolean?                 @default(false) @map("is_testing")
-  streaks               Streak[]
   numberFlashcadLearned NumberFlashcardLearned[]
   codeTokens            CodeToken[]
+  activies              Activity[]
 
   @@map("users")
 }
@@ -327,17 +327,6 @@ model File {
   @@map("files")
 }
 
-model Streak {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  userId    String?  @map("user_id")
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date      DateTime
-
-  @@map("streaks")
-}
-
 model NumberFlashcardLearned {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
@@ -352,4 +341,13 @@ model NumberFlashcardLearned {
 
   @@unique([deckId, date])
   @@map("count_flashcard_learneds")
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  timestamp DateTime @unique @default(now()) @map("timestamp")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("activities")
 }

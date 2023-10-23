@@ -22,9 +22,9 @@ Table users {
   settingLearn setting_learns
   File files [not null]
   isTesting Boolean [default: false]
-  streaks streaks [not null]
   numberFlashcadLearned count_flashcard_learneds [not null]
   codeTokens code_tokens [not null]
+  activies activities [not null]
 }
 
 Table code_tokens {
@@ -248,15 +248,6 @@ Table files {
   user users
 }
 
-Table streaks {
-  id String [pk]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
-  userId String
-  user users
-  date DateTime [not null]
-}
-
 Table count_flashcard_learneds {
   id String [pk]
   createdAt DateTime [default: `now()`, not null]
@@ -272,6 +263,13 @@ Table count_flashcard_learneds {
   indexes {
     (deckId, date) [unique]
   }
+}
+
+Table activities {
+  id String [pk]
+  timestamp DateTime [default: `now()`, unique, not null]
+  userId String [not null]
+  user users [not null]
 }
 
 Enum UserStatus {
@@ -338,8 +336,8 @@ Ref: setting_learns.userId - users.id [delete: Cascade]
 
 Ref: files.userId > users.id [delete: Cascade]
 
-Ref: streaks.userId > users.id [delete: Cascade]
-
 Ref: count_flashcard_learneds.userId > users.id [delete: Cascade]
 
 Ref: count_flashcard_learneds.deckId > decks.id [delete: Cascade]
+
+Ref: activities.userId > users.id [delete: Cascade]

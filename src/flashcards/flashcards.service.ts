@@ -1,6 +1,6 @@
 import { PrismaService } from '@/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import {
   CreateFlashcardDto,
   QueryChartDto,
@@ -122,48 +122,78 @@ export class FlashcardsService {
 
     const currentDate = new Date(getDate());
 
-    const [, updatedFlashcard] = await this.prismaService.$transaction([
-      this.prismaService.deck.update({
-        where: {
-          id: flashcard.deckId,
-        },
-        data: {
-          learnAt: fields.lastReviewed ? new Date(getDate()) : undefined,
-        },
-      }),
-      this.prismaService.flashcard.update({
-        where: {
-          id,
-        },
-        data: {
-          ...fields,
-        },
-      }),
-      this.prismaService.numberFlashcardLearned.upsert({
-        where: {
-          deckId_date: {
-            deckId: flashcard.deckId,
-            date: currentDate,
+    const [, updatedFlashcard, numberFlashcardLearned, settingLearning] =
+      await this.prismaService.$transaction([
+        this.prismaService.deck.update({
+          where: {
+            id: flashcard.deckId,
           },
-        },
-        create: {
-          userId,
-          date: currentDate,
-          deckId: flashcard.deckId,
-          learned: fields.n === 1 ? 1 : 0,
-          reviewed: fields.n > 1 ? 1 : 0,
+          data: {
+            learnAt: fields.lastReviewed ? new Date(getDate()) : undefined,
+          },
+        }),
+        this.prismaService.flashcard.update({
+          where: {
+            id,
+          },
+          data: {
+            ...fields,
+          },
+        }),
+        this.prismaService.numberFlashcardLearned.upsert({
+          where: {
+            deckId_date: {
+              deckId: flashcard.deckId,
+              date: currentDate,
+            },
+          },
+          create: {
+            userId,
+            date: currentDate,
+            deckId: flashcard.deckId,
+            learned: fields.n === 1 ? 1 : 0,
+            reviewed: fields.n > 1 ? 1 : 0,
+          },
+          update: {
+            learned: {
+              increment: fields.n === 1 ? 1 : 0,
+            },
+            reviewed: {
+              increment: fields.n > 1 ? 1 : 0,
+            },
+          },
+        }),
+        this.prismaService.settingLearn.findUnique({
+          where: {
+            userId,
+          },
+        }),
+      ]);
+
+    // If user has learned enough flashcards or reviewed enough flashcards
+    if (
+      numberFlashcardLearned.learned >= settingLearning.maxFlashcardPerDay ||
+      numberFlashcardLearned.reviewed >= settingLearning.maxReviewPerDay
+    ) {
+      const timestamp = dayjs()
+        .set('hour', 0)
+        .set('minute', 0)
+        .set('second', 0)
+        .toDate();
+
+      await this.prismaService.activity.upsert({
+        where: {
+          timestamp,
         },
         update: {
-          learned: {
-            increment: fields.n === 1 ? 1 : 0,
-          },
-          reviewed: {
-            increment: fields.n > 1 ? 1 : 0,
-          },
+          timestamp,
         },
-      }),
-    ]);
-
+        create: {
+          timestamp,
+          userId,
+        },
+      });
+    }
     return updatedFlashcard;
   }
 

@@ -28,24 +28,6 @@ import {
   SocialAuthGuard,
 } from './guards';
 
-const handleCookie = async (
-  res: Response,
-  accessToken: string,
-  refreshToken: string,
-) => {
-  res.cookie('access_token', accessToken, {
-    maxAge: 1000 * 60 * 60 * 23, // 23 hours
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-  });
-
-  res.cookie('refresh_token', refreshToken, {
-    maxAge: 1000 * 60 * 60 * 24 * 6, // 6 days
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-  });
-};
-
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -76,6 +58,16 @@ export class AuthController {
     res.status(HttpStatus.CREATED).json({
       message:
         'Create your account successfully. Please verify your email to login',
+      data: user,
+    });
+  }
+
+  @Post('/register-admin')
+  async registerAdmin(@Body() registerDto: RegisterDto, @Res() res: Response) {
+    const user = await this.authService.registerAdminAccount(registerDto);
+
+    res.status(HttpStatus.CREATED).json({
+      message: 'Create admin account successfully',
       data: user,
     });
   }

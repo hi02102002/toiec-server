@@ -19,8 +19,9 @@ import { TestsModule } from './tests/tests.module';
 import { TopicsModule } from './topics/topics.module';
 import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
+import { ActivitiesModule } from './activities/activities.module';
+import { CrawlModule } from './crawl/crawl.module';
 
-console.log(process.cwd() + '/templates/');
 @Module({
   imports: [
     AuthModule,
@@ -48,6 +49,8 @@ console.log(process.cwd() + '/templates/');
         adapter: new ReactAdapter(),
       },
     }),
+    ActivitiesModule,
+    CrawlModule,
   ],
   controllers: [AppController],
   providers: [],
